@@ -34,7 +34,7 @@ Resources:
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 8080
-        ToPort: 8080
+        ToPort: 80
         CidrIp: 0.0.0.0/0
       - IpProtocol: tcp
         FromPort: 22
@@ -56,8 +56,6 @@ Resources:
           sudo systemctl start apache2.service          
       # ToDo: AMI ID of Ubuntu Linux machine. Too get one, try creating a VM from the web console. 
       ImageId: ami-0cff7528ff583bf9a
-      # ToDo: Change the key-pair name, as applicable to you. 
-      KeyName: Proj2key
       SecurityGroups:
       - Ref: WebServerSecGroup
       InstanceType: t3.medium
