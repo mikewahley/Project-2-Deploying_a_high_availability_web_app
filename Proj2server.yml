@@ -24,6 +24,7 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
+  
   WebServerSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -33,18 +34,49 @@ Resources:
           !Sub "${EnvironmentName}-VPCID"
       SecurityGroupIngress:
       - IpProtocol: tcp
-        FromPort: 8080
+        FromPort: 80
         ToPort: 80
-        CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
         CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: 0
         ToPort: 65535
         CidrIp: 0.0.0.0/0
+
+  RoleForS3Access: 
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+
+  ServerInstanceProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: / 
+      Roles: 
+        - !Ref RoleForS3Access
+  
+  RolePolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: S3InstancePolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: 's3:*'
+            Resource: '*'
+      Roles:
+        - !Ref RoleForS3Access
+
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -53,9 +85,13 @@ Resources:
           #!/bin/bash
           sudo apt-get update -y
           sudo apt-get install apache2 -y
-          sudo systemctl start apache2.service          
-      # ToDo: AMI ID of Ubuntu Linux machine. Too get one, try creating a VM from the web console. 
-      ImageId: ami-0cff7528ff583bf9a
+          sudo systemctl start apache2.service   
+          sudo apt-get install awscli -y 
+          cd /var/www/html
+          sudo aws s3 cp s3://mywebsite4project2/index.html .  
+          sudo aws s3 cp s3://mywebsite4project2/done.gif .  
+      ImageId: ami-052efd3df9dad4825
+      IamInstanceProfile: !Ref ServerInstanceProfile
       SecurityGroups:
       - Ref: WebServerSecGroup
       InstanceType: t3.medium
@@ -63,18 +99,20 @@ Resources:
       - DeviceName: "/dev/sdk"
         Ebs:
           VolumeSize: '10'
+
   WebAppGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
       - Fn::ImportValue: 
-          !Sub "${EnvironmentName}-PRIV-NETS"
+          !Sub "${EnvironmentName}-PRIV-NETS" 
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
-      MinSize: '3'
-      MaxSize: '5'
+      MinSize: '4'
+      MaxSize: '6'
       TargetGroupARNs:
       - Ref: WebAppTargetGroup
+
   WebAppLB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -83,6 +121,7 @@ Resources:
       - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
       SecurityGroups:
       - Ref: LBSecGroup
+  
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -94,6 +133,7 @@ Resources:
         Ref: WebAppLB
       Port: '80'
       Protocol: HTTP
+
   ALBListenerRule:
       Type: AWS::ElasticLoadBalancingV2::ListenerRule
       Properties:
@@ -105,6 +145,7 @@ Resources:
           Values: [/]
         ListenerArn: !Ref 'Listener'
         Priority: 1
+  
   WebAppTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -113,9 +154,17 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 8
       HealthyThresholdCount: 2
-      Port: 8080
+      Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 5
       VpcId: 
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
+
+Outputs: 
+
+  LBPublicURL: 
+    Description: Public URL of our load balancer
+    Value: !Join ["", ["http://", !GetAtt WebAppLB.DNSName]]
+    Export:
+      Name: !Sub ${EnvironmentName}-LB-PUBLIC-URL
