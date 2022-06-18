@@ -160,4 +160,10 @@ Resources:
       VpcId: 
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
+Outputs: 
 
+  LBPublicURL: 
+    Description: Public URL of our load balancer
+    Value: !Join ["", ["http://", !GetAtt WebAppLB.DNSName]]
+    Export:
+      Name: !Sub ${EnvironmentName}-LB-PUBLIC-URL
