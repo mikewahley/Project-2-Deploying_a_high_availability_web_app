@@ -90,7 +90,7 @@ Resources:
           cd /var/www/html
           sudo aws s3 cp s3://mywebsite4project2/index.html .  
           sudo aws s3 cp s3://mywebsite4project2/done.gif .  
-      ImageId: ami-052efd3df9dad4825
+      ImageId: ami-0cff7528ff583bf9a
       IamInstanceProfile: !Ref ServerInstanceProfile
       SecurityGroups:
       - Ref: WebServerSecGroup
@@ -161,10 +161,3 @@ Resources:
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
 
-Outputs: 
-
-  LBPublicURL: 
-    Description: Public URL of our load balancer
-    Value: !Join ["", ["http://", !GetAtt WebAppLB.DNSName]]
-    Export:
-      Name: !Sub ${EnvironmentName}-LB-PUBLIC-URL
