@@ -13,3 +13,5 @@ This is a cloudformation template for the infrastructure of deploying a high ava
      
 - Proj2server-param -
      This is the parameter template for the Server setup
+
+Deployed app url: http://proj2-webap-1sivimdf8sxq0-1001142315.us-east-1.elb.amazonaws.com/
