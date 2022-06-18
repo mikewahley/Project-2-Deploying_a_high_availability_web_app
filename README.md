@@ -2,14 +2,14 @@
 This is a cloudformation template for the infrastructure of deploying a high availability webapp
 
 
-- Proj2infra
+- Proj2infra -
      This is the network infrastructure code
      
-- Proj2infra-param
+- Proj2infra-param -
      This is the Parameter template for the infrastructure
      
-- Proj2Server
+- Proj2Server -
      This is the server provisioning template
      
-- Proj2server-param.json
+- Proj2server-param -
      This is the parameter template for the Server setup
