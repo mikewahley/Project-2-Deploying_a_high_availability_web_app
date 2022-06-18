@@ -90,7 +90,7 @@ Resources:
           cd /var/www/html
           sudo aws s3 cp s3://mywebsite4project2/index.html .  
           sudo aws s3 cp s3://mywebsite4project2/done.gif .  
-      ImageId: ami-0cff7528ff583bf9a
+      ImageId: ami-052efd3df9dad4825
       IamInstanceProfile: !Ref ServerInstanceProfile
       SecurityGroups:
       - Ref: WebServerSecGroup
